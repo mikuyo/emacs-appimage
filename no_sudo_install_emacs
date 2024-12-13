@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+cd $HOME/bin
+
+# github repo: https://github.com/blahgeek/emacs-appimage/releases?q=Release&expanded=true
+
+# download nox release: 
+curl -L -O https://github.com/blahgeek/emacs-appimage/releases/download/github-action-build-11538673229/Emacs-30.0.92-nox.AppImage
+
+E=Emacs-30.0.92-nox.AppImage
+chmod u+x $E
+./"$E" --appimage-extract
+mkdir emacsdir
+mv squashfs-root emacsdir
+
+cat << 'EOF' > ctags
+#!/bin/bash
+WRAPPER_ROOT="$(dirname "$(readlink -f "$0")")"
+exec "$WRAPPER_ROOT/emacsdir/squashfs-root/AppRun" --emacs-appimage-run-as ctags "$@"
+EOF
+
+cat << 'EOF' > ebrowse
+#!/bin/bash
+WRAPPER_ROOT="$(dirname "$(readlink -f "$0")")"
+exec "$WRAPPER_ROOT/emacsdir/squashfs-root/AppRun"  --emacs-appimage-run-as ebrowse "$@"
+EOF
+
+cat << 'EOF' > emacs
+#!/bin/bash
+WRAPPER_ROOT="$(dirname "$(readlink -f "$0")")"
+exec "$WRAPPER_ROOT/emacsdir/squashfs-root/AppRun" "$@"
+EOF
+
+cat << 'EOF' > emacsclient
+#!/bin/bash
+WRAPPER_ROOT="$(dirname "$(readlink -f "$0")")"
+exec "$WRAPPER_ROOT/emacsdir/squashfs-root/AppRun"  --emacs-appimage-run-as emacsclient "$@"
+EOF
+
+chmod u+x ctags ebrowse emacs emacsclient
